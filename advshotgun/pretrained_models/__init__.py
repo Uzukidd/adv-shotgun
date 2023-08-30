@@ -1,0 +1,1 @@
+from .test_CNN import Basic_CNN
