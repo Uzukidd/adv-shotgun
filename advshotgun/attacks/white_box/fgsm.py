@@ -9,6 +9,23 @@ from torch.autograd import Variable
 class FGSM(nn.Module):
     
     def __init__(self, eps:float = 0.03):
+        """
+        Fast Gradient Sign Method 
+            $x\\prime = x + \\epsilon * sign(\\nabla f(x))$
+
+        Parameters
+        ----------
+        eps : float 
+            epsilon
+
+        Returns
+        -------
+        adv_x : torch.Tensor
+            Adversarial sample of x
+
+
+        >>> FGSM(eps = 0.03)
+        """
         super().__init__()
         self.eps = eps
         self.criterion = nn.CrossEntropyLoss()
@@ -20,6 +37,7 @@ class FGSM(nn.Module):
         adv_x = adv_x.detach()
         adv_x.requires_grad_(True)
         
+        model.zero_grad()
         logits = model(adv_x)
         loss = self.criterion(logits, gt)
         loss.backward()
@@ -29,6 +47,17 @@ class FGSM(nn.Module):
         
         return adv_x
         
+class iFGSM(FGSM):
+    
+    def __init__(self, eps:float = 0.03, iteration:int = 5):
+        super().__init__(eps)
+        self.iteration = iteration
+        
+    def forward(self, x:torch.Tensor, adv_x:torch.Tensor, gt:torch.Tensor, model:nn.Module):
+        for i in range(self.iteration):
+            adv_x = super().forward(x, adv_x, gt, model)
+        
+        return adv_x
         
     
     
